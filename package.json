@@ -11,6 +11,12 @@
   "author": "Marco Zimmermann",
   "license": "ISC",
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.1",
+    "mongoose": "^8.2.3"
   }
 }
