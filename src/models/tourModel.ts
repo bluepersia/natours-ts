@@ -31,7 +31,7 @@ const tourSchema = new Schema<ITour>(
             validate: {
                 validator: function (val:string):boolean
                 {
-                    return validator.isAlpha (val.split (' ').join (''));
+                    return validator.isAlpha (val.replace (/^$/g, ''));
                 }
             }
         },
