@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import handle from 'express-async-handler';
 import { Model } from 'mongoose';
 import APIFeatures from '../util/APIFeatures';
+import AppError from '../util/AppError';
 
 
 
@@ -37,6 +38,9 @@ export const getOne = (Model:Model<any>) => handle (async (req:Request, res:Resp
 {
     const doc = await Model.findById (req.params.id);
 
+    if (!doc)
+        throw new AppError ('No document with that ID', 404);
+    
     res.status (200).json ({
         status: 'success',
         data: {
@@ -50,6 +54,9 @@ export const updateOne = (Model:Model<any>) => handle (async (req:Request, res:R
 {
     const doc = await Model.findByIdAndUpdate (req.params.id, req.body, {new:true, runValidators:true});
 
+    if (!doc)
+        throw new AppError ('No document with that ID', 404);
+
     res.status (200).json ({
         status: 'success',
         data: {
@@ -62,6 +69,9 @@ export const deleteOne = (Model:Model<any>) => handle (async (req:Request, res:R
 {
     const doc = await Model.findByIdAndDelete (req.params.id);
 
+    if (!doc)
+        throw new AppError ('No document with that ID', 404);
+    
     res.status (204).json ({
         status: 'success',
         data: null

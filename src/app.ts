@@ -2,12 +2,15 @@ import express from 'express';
 const app = express ();
 import tourRouter from './routes/tourRoutes';
 import globalErrorHandler from './controller/errorController';
+import AppError from './util/AppError';
 
 app.use (express.json({limit: '10kb'}));
 
 
 app.use ('/api/v1/tours', tourRouter);
 
+
+app.all ('*', () => {throw new AppError ('Route not found!', 404)});
 
 app.use (globalErrorHandler);
 
