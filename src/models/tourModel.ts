@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import slugify from 'slugify';
+import validator from 'validator';
 
 export interface ITour 
 {
@@ -26,7 +27,13 @@ const tourSchema = new Schema<ITour>(
             type:String,
             required:true,
             minlength: 10,
-            maxlength: 40
+            maxlength: 40,
+            validate: {
+                validator: function (val:string):boolean
+                {
+                    return validator.isAlpha (val.split (' ').join (''));
+                }
+            }
         },
         slug: String,
         duration: {
