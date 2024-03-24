@@ -58,4 +58,9 @@ export default class Email
         await this.send ('Welcome to the Natours Family', 'welcome');
     }
 
+    async sendPasswordReset () : Promise<void>
+    {
+        await this.send ('Reset your password', 'resetPassword');
+    }
+
 }
