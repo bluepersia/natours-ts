@@ -6,6 +6,7 @@ import { HydratedDocument } from "mongoose";
 import AppError from "../util/AppError";
 const util = require ('util');
 import Email from "../util/Email";
+import crypto from 'crypto';
 
 function sign (id:string) : string 
 {
@@ -106,3 +107,53 @@ export const restrictTo = function (...roles:string[])
 
 
 }
+
+
+export const forgotPassword  = handle (async(req:Request, res:Response) : Promise<void> =>
+{
+    const user = await User.findOne ({email: req.body.email});
+
+    if (!user)
+        throw new AppError ('No user with that ID', 404);
+
+    const resetToken = user.createPasswordResetToken ();
+    await user.save ({validateBeforeSave:false});
+
+    const resetUrl = `${process.env.HOME_URL}/reset-password?token=${resetToken}`;
+
+    try 
+    {
+        await new Email (user, {url:resetUrl}).sendPasswordReset ();
+    }
+    catch
+    {
+        throw new AppError ('Something went wrong sending mail. Please try again later.', 500);
+    }
+
+    res.status (200).json ({
+        status: 'success',
+        message: 'Token was sent!'
+    })
+});
+
+
+export const resetPassword = handle (async(req:Request, res:Response) : Promise<void> =>
+{
+    const hashedToken = crypto.createHash ('sha256').update (req.params.token).digest ('hex');
+
+    const user = await User.findOne ({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: {$gt: Date.now()}
+    })
+
+    if (!user)
+        throw new AppError ('Token invalid or has expired', 400);
+
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+    await user.save ();
+
+    signAndSend (user, res, 200);
+});
