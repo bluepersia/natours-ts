@@ -1,5 +1,5 @@
 import express from 'express';
-const router = express.Router ();
+const router = express.Router ({mergeParams:true});
 import authController = require ('../controller/authController');
 import reviewController = require ('../controller/reviewController');
 import { setMine } from '../controller/factory';
