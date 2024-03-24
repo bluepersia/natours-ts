@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { HydratedDocument } from "mongoose";
 import AppError from "../util/AppError";
 const util = require ('util');
+import Email from "../util/Email";
 
 function sign (id:string) : string 
 {
@@ -38,6 +39,8 @@ export const signup = handle (async (req:Request, res:Response) : Promise<void> 
     const { name, email, password, passwordConfirm} = req.body;
 
     const user = await User.create ({name, email, password, passwordConfirm});
+
+    new Email (user, {url: `${process.env.HOME_URL}/login`}).sendWelcome ();
 
     signAndSend (user, res, 201);
 });
