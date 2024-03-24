@@ -3,12 +3,21 @@ import handle from 'express-async-handler';
 import { Model } from 'mongoose';
 import APIFeatures from '../util/APIFeatures';
 import AppError from '../util/AppError';
+import { IRequest } from './authController';
 
 
 
 export const getAll = (Model:Model<any>) => handle (async (req:Request, res:Response) : Promise<void> =>
 {
-    const query = Model.find ();
+    const filter:{[key:string]:any} = {}
+    
+    if (req.params.userId)
+        filter.user = req.params.userId;
+
+    if (req.params.tourId)
+        filter.tour = req.params.tourId;
+
+    const query = Model.find (filter);
     new APIFeatures (req.query, query).all ();
     const docs = await query;
 
@@ -23,6 +32,13 @@ export const getAll = (Model:Model<any>) => handle (async (req:Request, res:Resp
 
 export const createOne = (Model:Model<any>) => handle(async (req:Request, res:Response) : Promise<void> =>
 {
+
+    if (req.params.userId)
+        req.body.user = req.params.userId;
+
+    if (req.params.tourId)
+        req.body.tour = req.params.tourId;
+
     const doc = await Model.create (req.body);
 
     res.status (201).json ({
@@ -76,4 +92,27 @@ export const deleteOne = (Model:Model<any>) => handle (async (req:Request, res:R
         status: 'success',
         data: null
     })
+});
+
+
+
+export const setMine = function (req:Request, res:Response, next: () => void) : void
+{
+    req.params.userId = (req as IRequest).user.id;
+    next ();
+}
+
+export const isMine = (Model:Model<any>) => handle (async(req:Request, res:Response, next: () => void) : Promise<void> =>
+{
+    const doc = await Model.findById (req.params.id);
+
+    if (!doc)
+        throw new AppError ('No document with that ID', 404);
+
+    const {user } = req as IRequest;
+
+    if (doc.user.toString () === user.id || doc.user.id === user.id || user.role === 'admin')
+        return next ();
+
+    throw new AppError ('Resource does not belong to you', 403);
 });
