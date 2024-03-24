@@ -56,7 +56,7 @@ export const login = handle (async(req:Request, res:Response) : Promise<void> =>
 
     const user = await User.findOne ({email}).select ('+password');
 
-    if(!user)
+    if(!user || !user.active)
         throw new AppError ('No user with that email', 404);
 
     if (!(await user.comparePassword (password, user.password!)))
@@ -84,7 +84,7 @@ export const protect = handle (async (req:Request, res:Response, next:() => void
 
     const user = await User.findById (decoded.id);
 
-    if (!user)
+    if (!user || !user.active)
         throw new AppError ('The user this token belongs to no longer exists.', 401);
 
     if (user.hasPasswordChangedSince (new Date (decoded.iat * 1000)))
@@ -157,3 +157,23 @@ export const resetPassword = handle (async(req:Request, res:Response) : Promise<
 
     signAndSend (user, res, 200);
 });
+
+
+export const updatePassword = handle(async(req:Request, res:Response) : Promise<void> =>
+{
+    const user = await User.findById ((req as IRequest).user.id).select ('+password');
+
+    if (!user)
+        throw new AppError ('No user with that ID', 404);
+
+    if (!(await user.comparePassword (req.body.passwordCurrent, user.password!)))
+        throw new AppError ('Incorrect password', 401);
+    
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save ();
+
+    signAndSend (user, res, 200);
+});
+
+
