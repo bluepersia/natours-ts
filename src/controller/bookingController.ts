@@ -3,6 +3,7 @@ import Tour from "../models/tourModel";
 import handle from 'express-async-handler';
 import AppError from "../util/AppError";
 import { IRequest } from "./authController";
+import Booking from "../models/bookingModel";
 const stripe = require ('stripe');
 
 
@@ -40,5 +41,20 @@ export const getStripeCheckoutSession = handle (async(req:Request, res:Response)
     res.status (200).json ({
         status: 'success',
         session
+    })
+});
+
+
+export const getMyBookings = handle (async(req:Request, res:Response) : Promise<void> =>
+{
+    const bookings = await Booking.find({user: (req as IRequest).user.id});
+
+    const tours = await Promise.all (bookings.map (async booking => await Tour.findById(booking.tour)));
+
+    res.status (200).json ({
+        result: tours.length,
+        data: {
+            tours
+        }
     })
 });

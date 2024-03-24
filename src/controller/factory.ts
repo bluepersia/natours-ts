@@ -23,6 +23,7 @@ export const getAll = (Model:Model<any>) => handle (async (req:Request, res:Resp
 
     res.status (200).json ({
         status: 'success',
+        result: docs.length,
         data: {
             docs
         }
