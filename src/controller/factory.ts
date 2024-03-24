@@ -116,3 +116,13 @@ export const isMine = (Model:Model<any>) => handle (async(req:Request, res:Respo
 
     throw new AppError ('Resource does not belong to you', 403);
 });
+
+
+
+export const imageFilter = function (req:Request, file:Express.Multer.File, cb:Function) : void
+{
+    if (file.mimetype.startsWith ('image'))
+        cb (null, true);
+    else
+        cb (new AppError ('Not an image. Please only use images.', 400), false);
+}
