@@ -8,6 +8,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import cookies from 'cookie-parser';
 import tourRouter from './routes/tourRoutes';
+import userRouter from './routes/userRoutes';
 import globalErrorHandler from './controller/errorController';
 import AppError from './util/AppError';
 
@@ -39,6 +40,7 @@ app.use (express.json({limit: '10kb'}));
 
 
 app.use ('/api/v1/tours', tourRouter);
+app.use ('/api/v1/users', userRouter);
 
 
 app.all ('*', () => {throw new AppError ('Route not found!', 404)});
