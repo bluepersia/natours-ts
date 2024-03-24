@@ -1,6 +1,6 @@
 import {HydratedDocument, Query, Schema, Types, model} from 'mongoose';
 import { IUser } from './userModel';
-
+import Tour from './tourModel';
 
 export interface IReview
 {
@@ -39,12 +39,42 @@ const reviewSchema = new Schema<IReview>({
     }
 })
 
+async function calcRatingsForTour (tourId:Types.ObjectId) : Promise<void>
+{
+    const stats = await Review.aggregate ([
+        {
+            $match: { tour: tourId}
+        },
+        {
+            $group: {
+                _id: '$tour',
+                ratingsAverage: {$avg: '$rating'},
+                ratingsQuantity: {$sum: 1}
+            }
+        }
+    ])
+
+    const data = stats.length >= 1 ? stats[0] : {ratingsAverage: 4.5, ratingsQuantity: 0};
+
+    await Tour.findByIdAndUpdate (tourId, data);
+}
 
 reviewSchema.pre (/(find|findOne)$/, function (next) : void
 {
     (this as Query<unknown, unknown>).populate ({path: 'user', select: 'name photo'})
     next ();
 });
+
+
+reviewSchema.post ('save', async function () : Promise<void>
+{
+    await calcRatingsForTour (this.tour);
+});
+
+reviewSchema.post (/(findOneAndUpdate|findOneAndDelete)/, async function (doc) : Promise<void>
+{
+    await calcRatingsForTour (doc.tour);
+})
 
 reviewSchema.index ({tour:1, user:1}, {unique:true});
 
