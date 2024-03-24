@@ -129,6 +129,10 @@ tourSchema.pre ('save', function (next) : void
     next ();
 });
 
+
+tourSchema.index ({price:1, ratingsAverage:-1});
+tourSchema.index ({slug: 1});
+
 const Tour = model ('Tour', tourSchema);
 
 

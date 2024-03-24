@@ -46,6 +46,8 @@ reviewSchema.pre (/(find|findOne)$/, function (next) : void
     next ();
 });
 
+reviewSchema.index ({tour:1, user:1}, {unique:true});
+
 const Review = model ('Review', reviewSchema);
 
 
