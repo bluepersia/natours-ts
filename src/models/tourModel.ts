@@ -103,11 +103,22 @@ const tourSchema = new Schema<ITour>(
         },
         startDates: [Date]
     }
+    ,
+    {
+        toJSON: {virtuals:true},
+        toObject: {virtuals:true}
+    }
 )
+
+tourSchema.virtual ('reviews', {
+    ref: 'Review',
+    foreignField: 'tour',
+    localField: '_id'
+})
 
 tourSchema.pre (/findOne$/, function (next): void
 {
-    (this as Query<any,any>).populate ({path: 'guides', select:'name photo role'});
+    (this as Query<any,any>).populate ({path: 'guides', select:'name photo role'}).populate ({path: 'reviews', select: 'review rating user'});
     next ();
 });
 
