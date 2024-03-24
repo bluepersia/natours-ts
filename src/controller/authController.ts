@@ -3,6 +3,7 @@ import User, { IUser } from "../models/userModel";
 import handle from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import { HydratedDocument } from "mongoose";
+import AppError from "../util/AppError";
 
 function sign (id:string) : string 
 {
@@ -40,3 +41,19 @@ export const signup = handle (async (req:Request, res:Response) : Promise<void> 
     signAndSend (user, res, 201);
 });
 
+
+export const login = handle (async(req:Request, res:Response) : Promise<void> =>
+{
+    const {email, password } = req.body;
+
+    if (!email || !password)
+        throw new AppError ('Please provide email and password', 400);
+
+    const user = await User.findOne ({email}).select ('+password');
+
+    if(!user)
+        throw new AppError ('No user with that email', 404);
+
+    if (!(await user.comparePassword (password, user.password!)))
+        throw new AppError ('Incorrect password', 401);
+});
