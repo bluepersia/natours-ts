@@ -1,6 +1,7 @@
-import { Schema, model } from "mongoose";
+import { HydratedDocument, Query, Schema, Types, model } from "mongoose";
 import slugify from 'slugify';
 import validator from 'validator';
+import { IUser } from "./userModel";
 
 export interface ITour 
 {
@@ -18,7 +19,21 @@ export interface ITour
     imageCover:string,
     images:string[],
     createdAt:Date,
-    startDates:Date[]
+    startDates:Date[],
+    startLocation : {
+        type:string,
+        coordinates: [number, number],
+        address: string,
+        description:string
+    },
+    locations: [{
+        type:string,
+        coordinates: [number, number],
+        address: string,
+        description:string,
+        day:number
+    }],
+    guides: Types.ObjectId[] | HydratedDocument<IUser>[]
 }
 
 const tourSchema = new Schema<ITour>(
@@ -89,6 +104,12 @@ const tourSchema = new Schema<ITour>(
         startDates: [Date]
     }
 )
+
+tourSchema.pre (/findOne$/, function (next): void
+{
+    (this as Query<any,any>).populate ({path: 'guides', select:'name photo role'});
+    next ();
+});
 
 
 tourSchema.pre ('save', function (next) : void
