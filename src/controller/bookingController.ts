@@ -6,6 +6,7 @@ import { IRequest } from "./authController";
 import Booking from "../models/bookingModel";
 const stripe = require ('stripe');
 import factory = require ('./factory');
+import User from "../models/userModel";
 
 
 export const getAllBookings = factory.getAll (Booking);
@@ -65,3 +66,41 @@ export const getMyBookings = handle (async(req:Request, res:Response) : Promise<
         }
     })
 });
+
+
+
+export const stripeWebhook  = function (req:Request, res:Response) 
+{
+    const signature = req.headers['stripe-signature'];
+
+    let event;
+    try 
+    {
+        event = stripe.webhooks.constructEvent (
+            req.body,
+            signature,
+            process.env.STRIPE_WEBHOOK_SECRET
+        )
+    }
+    catch (err)
+    {
+        return res.status (400).send (`Webhook error: ${(err as Error).message}`)
+    }
+
+    if (event.type === 'checkout.session.completed')
+        createBookingCheckout (event.data.object);
+}
+
+async function createBookingCheckout (session:{client_reference_id:string, customer_email:string, amount_total:number}) : Promise<void>
+{
+    const user = await User.findOne({email: session.customer_email});
+
+    if (!user)
+        throw new AppError ('No user with that email', 404);
+
+    await Booking.create({
+        user: user.id,
+        tour: session.client_reference_id,
+        price: session.amount_total / 100
+    })
+}

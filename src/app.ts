@@ -6,7 +6,9 @@ const xss = require ('xss-clean');
 import hpp from 'hpp';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import cookies from 'cookie-parser';
+import bookingController = require ('./controller/bookingController');
 import tourRouter from './routes/tourRoutes';
 import userRouter from './routes/userRoutes';
 import reviewRouter from './routes/reviewRoutes';
@@ -36,7 +38,11 @@ app.use (rateLimit ({
     message: 'Exceeded the rate limit' 
 }))
 
+app.use (compression ());
+
 app.use (cookies ());
+
+app.post ('/stripe-webhook', express.raw ({type: 'application.json'}), bookingController.stripeWebhook);
 
 app.use (express.json({limit: '10kb'}));
 
