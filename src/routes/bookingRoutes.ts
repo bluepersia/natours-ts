@@ -5,6 +5,8 @@ import authController = require ('../controller/authController')
 
 router.use (authController.protect);
 
+router.get ('/bookings', bookingController.getMyBookings);
+
 router.get ('/stripe-checkout', bookingController.getStripeCheckoutSession);
 
 export default router;
