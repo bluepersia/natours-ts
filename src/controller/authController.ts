@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import User, { IUser } from "../models/userModel";
 import handle from 'express-async-handler';
@@ -30,7 +29,6 @@ function signAndSend (user:HydratedDocument<IUser>, res:Response, status = 200) 
             user
         }
     })
-
 }
 
 export const signup = handle (async (req:Request, res:Response) : Promise<void> =>
