@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import validator from "validator";
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export interface IUser
 {
@@ -11,8 +12,11 @@ export interface IUser
     password: string | undefined,
     passwordConfirm: string | undefined,
     passwordChangedAt:Date,
+    passwordResetToken:string | undefined,
+    passwordResetExpires: Date | undefined,
     comparePassword: (s:string, hash:string) => Promise<boolean>,
-    hasPasswordChangedSince: (date:Date) => boolean
+    hasPasswordChangedSince: (date:Date) => boolean,
+    createPasswordResetToken: () => string
 }
 
 
@@ -55,7 +59,9 @@ const userSchema = new Schema<IUser>({
             message: 'Passwords must match!'
         }
     },
-    passwordChangedAt: Date
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date
 })
 
 userSchema.pre ('save', async function (next):Promise<void>
@@ -81,6 +87,17 @@ userSchema.methods.hasPasswordChangedSince = function (date:Date) : boolean
 {
     return this.passwordChangedAt && this.passwordChangedAt >= date;
 }
+
+userSchema.methods.createPasswordResetToken = function () : string
+{
+    const token = crypto.randomBytes (32).toString ('hex');
+
+    this.passwordResetToken = crypto.createHash ('sha256').update (token).digest ('hex');
+    this.passwordResetExpires = new Date (Date.now() + (7 * 24 * 60 * 60 * 1000));
+
+    return token;
+}
+
 
 const User = model ('User', userSchema);
 
