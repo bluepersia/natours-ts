@@ -1,4 +1,4 @@
-import {HydratedDocument, Schema, Types, model} from 'mongoose';
+import {HydratedDocument, Query, Schema, Types, model} from 'mongoose';
 import { IUser } from './userModel';
 
 
@@ -39,6 +39,12 @@ const reviewSchema = new Schema<IReview>({
     }
 })
 
+
+reviewSchema.pre (/(find|findOne)$/, function (next) : void
+{
+    (this as Query<unknown, unknown>).populate ({path: 'user', select: 'name photo'})
+    next ();
+});
 
 const Review = model ('Review', reviewSchema);
 
